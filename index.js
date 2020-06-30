@@ -5,14 +5,37 @@ const { makeEmbed } = require("./utils");
 
 /** @type {{name: string, isAllowed: Function, execute: Function}[]} */
 const commands = [];
-loadCommands();
+/** @type {string[]} */
+const commandFiles = [];
 
 function loadCommands() {
-    fs.readdirSync("./cmds")
+    const cmdfiles = fs
+        .readdirSync("./cmds")
         .filter(c => c.endsWith(".js"))
-        .map(c => "./cmds/" + c.substr(0, c.length - 3))
-        .forEach(c => commands.push(require(c)));
+        .map(c => "./cmds/" + c.substr(0, c.length - 3));
+
+    commandFiles.push(...cmdfiles);
+    commandFiles.forEach(c => commands.push(require(c)));
 }
+
+global.reloadCommands = () => {
+    // Unloading commands if possible
+    commands.forEach(c => {
+        if (c.unload) c.unload();
+    });
+
+    // Clearing command store
+    commands.splice(0);
+
+    // Updating caches
+    commandFiles.forEach(f => {
+        delete require.cache[require.resolve(f)];
+    });
+    commandFiles.splice(0);
+
+    // Loading commands again
+    loadCommands();
+};
 
 const client = new Discord.Client({
     disableMentions: "everyone",
@@ -25,9 +48,13 @@ const client = new Discord.Client({
     }
 });
 
+client.on("ready", () => {
+    loadCommands();
+});
+
 client.on("messageReactionAdd", async (reaction, usr) => {
     console.log(
-        await db.getRow("react_roles", {
+        await db.getRows("react_roles", {
             msg_id: reaction.message.id,
             reaction: (await reaction.fetch()).emoji.identifier
         })
@@ -51,7 +78,7 @@ client.on("message", async msg => {
             const e = new Error("Execution of this command is restricted.");
             e.perms = true;
         }
-        await cmd.execute(msg, content, args);
+        await cmd.execute(msg, content, args, client);
     } catch (err) {
         console.error(err);
         if (!err.constructor) return;

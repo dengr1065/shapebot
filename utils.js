@@ -1,6 +1,8 @@
-const { name, version } = require("./package.json");
+let { name, version } = require("./package.json");
+
 const { execSync } = require("child_process");
 const Discord = require("discord.js");
+const fetch = require("node-fetch");
 
 function formattedVersion() {
     let commit = "unknown";
@@ -13,7 +15,39 @@ function formattedVersion() {
     return `${name} ${version} @ ${commit}`;
 }
 
-async function fetchShapezRepo(file) {}
+function reloadVersion() {
+    delete require.cache[require.resolve("./package.json")];
+
+    pkg = require("./package.json");
+    name = pkg.name;
+    version = pkg.version;
+}
+
+/**
+ *
+ * @param {Discord.Client} client
+ * @param {"PLAYING"|"WATCHING"|"STREAMING"} type
+ * @param {string} name
+ * @param {string?} url
+ */
+async function setStatus(client, type, name, url) {
+    await client.user.setActivity({
+        name: name,
+        type: type,
+        url: url
+    });
+}
+
+/**
+ * @param {string?} branch
+ * @param {string} file
+ */
+async function fetchShapezRepo(branch = "master", file) {
+    const base = `https://raw.githubusercontent.com/tobspr/shapez.io/${branch}/`;
+    const fullurl = base + encodeURIComponent(file);
+
+    return (await (await fetch(fullurl)).text()).trim();
+}
 
 function makeEmbed(title, color = 0x606060, client) {
     const embed = new Discord.MessageEmbed();
@@ -29,6 +63,8 @@ function makeEmbed(title, color = 0x606060, client) {
 
 module.exports = {
     formattedVersion,
+    reloadVersion,
+    setStatus,
     fetchShapezRepo,
     makeEmbed
 };

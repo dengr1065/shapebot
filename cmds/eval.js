@@ -5,7 +5,13 @@ module.exports = {
     name: "eval",
     /** @param {Discord.Message} msg */
     isAllowed: msg => owners.includes(msg.author.id),
-    execute: (msg, content, args) => {
-        eval(content.substr(5));
+    /**
+     * @param {Discord.Message} msg
+     * @param {string} content
+     * @param {string[]} args
+     * @param {Discord.Client} client
+     */
+    execute: async (msg, content, args, client) => {
+        await eval(content.substr(5));
     }
 };
