@@ -117,6 +117,7 @@ client.on("message", async msg => {
         if (!cmd.isAllowed(msg)) {
             const e = new Error("Execution of this command is restricted.");
             e.perms = true;
+            throw e;
         }
         await cmd.execute(msg, content, args, client);
     } catch (err) {
