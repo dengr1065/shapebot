@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 const fs = require("fs");
 const db = require("./db");
-const { makeEmbed } = require("./utils");
+const { makeEmbed, fetchShapezRepo, setStatus } = require("./utils");
 
 /** @type {{name: string, isAllowed: Function, execute: Function}[]} */
 const commands = [];
@@ -48,17 +48,57 @@ const client = new Discord.Client({
     }
 });
 
-client.on("ready", () => {
+client.on("ready", async () => {
     loadCommands();
+
+    const version = await fetchShapezRepo("master", "version");
+    await setStatus(client, "PLAYING", "shapez.io " + version);
 });
 
 client.on("messageReactionAdd", async (reaction, usr) => {
-    console.log(
-        await db.getRows("react_roles", {
-            msg_id: reaction.message.id,
-            reaction: (await reaction.fetch()).emoji.identifier
-        })
-    );
+    const fetched = await reaction.fetch();
+
+    const matching = await db.getRows("react_roles", {
+        msg_id: fetched.message.id,
+        reaction: fetched.emoji.id || fetched.emoji.name
+    });
+
+    if (matching.length == 0) return;
+
+    const user = await usr.fetch();
+    const member = await fetched.message.guild.members.fetch(user);
+
+    matching.forEach(async reactRole => {
+        try {
+            await member.roles.add(reactRole.role_id);
+        } catch (err) {
+            console.warn("Failed to add role", reactRole.role_id);
+            console.warn(err);
+        }
+    });
+});
+
+client.on("messageReactionRemove", async (reaction, usr) => {
+    const fetched = await reaction.fetch();
+
+    const matching = await db.getRows("react_roles", {
+        msg_id: fetched.message.id,
+        reaction: fetched.emoji.id || fetched.emoji.name
+    });
+
+    if (matching.length == 0) return;
+
+    const user = await usr.fetch();
+    const member = await fetched.message.guild.members.fetch(user);
+
+    matching.forEach(async reactRole => {
+        try {
+            await member.roles.remove(reactRole.role_id);
+        } catch (err) {
+            console.warn("Failed to remove role", reactRole.role_id);
+            console.warn(err);
+        }
+    });
 });
 
 client.on("message", async msg => {
@@ -103,4 +143,4 @@ client.on("message", async msg => {
     }
 });
 
-client.login(process.env.SB2_TOKEN);
+db.init(client, process.env.SB2_TOKEN);

@@ -1,18 +1,22 @@
-const Discord = require("discord.js");
 const mariadb = require("mariadb");
 
 /** @type {mariadb.Connection} */
 let conn;
 
-mariadb
-    .createConnection({
-        bigNumberStrings: true,
-        connectTimeout: 5000,
-        database: "shapebot",
-        password: process.env.SB2_DB_PASSWD,
-        user: "shapebot"
-    })
-    .then(c => (conn = c));
+function init(client, token) {
+    mariadb
+        .createConnection({
+            bigNumberStrings: true,
+            connectTimeout: 5000,
+            database: "shapebot",
+            password: process.env.SB2_DB_PASSWD,
+            user: "shapebot"
+        })
+        .then(c => {
+            conn = c;
+            client.login(token);
+        });
+}
 
 /**
  * @param {string} sql
@@ -43,6 +47,7 @@ async function getRows(table, defs, cols) {
 }
 
 module.exports = {
+    init,
     query,
     exec,
     getRows
