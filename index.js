@@ -63,6 +63,7 @@ client.on("messageReactionAdd", async (reaction, usr) => {
         reaction: fetched.emoji.id || fetched.emoji.name
     });
 
+    console.log(fetched.emoji.id || fetched.emoji.name);
     if (matching.length == 0) return;
 
     const user = await usr.fetch();
