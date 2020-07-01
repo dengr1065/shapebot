@@ -61,10 +61,24 @@ function makeEmbed(title, color = 0x606060, client) {
     return embed;
 }
 
+function parseEmoji(txt) {
+    if (!txt) return;
+    if (txt.length <= 4) return txt;
+    return txt.match(/<\:.*?\:(\d{18,19})>/)[1];
+}
+
+function displayEmoji(id) {
+    if (!id) return "";
+    if (id.length <= 4) return id;
+    return `<:unknown:${id}>`;
+}
+
 module.exports = {
     formattedVersion,
     reloadVersion,
     setStatus,
     fetchShapezRepo,
-    makeEmbed
+    makeEmbed,
+    parseEmoji,
+    displayEmoji
 };

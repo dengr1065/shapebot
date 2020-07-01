@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 const { owners } = require("../config.json");
 const { getRows, deleteFrom, insertInto } = require("../db");
-const { makeEmbed } = require("../utils");
+const { makeEmbed, parseEmoji, displayEmoji } = require("../utils");
 
 /**
  * @param {Discord.MessageEmbed} embed
@@ -9,11 +9,8 @@ const { makeEmbed } = require("../utils");
  * @param {string} reaction
  */
 function autoFields(embed, role, reaction) {
-    const isCustom = reaction.length > 18;
-    const emojiSpec = isCustom ? `<:unknown:${reaction}>` : reaction;
-
     embed.addField("Role", role.toString(), true);
-    embed.addField("Emoji", emojiSpec, true);
+    embed.addField("Emoji", displayEmoji(reaction), true);
 }
 
 module.exports = {
@@ -39,10 +36,7 @@ module.exports = {
                     return {
                         msg_id: e.msg_id,
                         role: role,
-                        reaction:
-                            e.reaction.length <= 4
-                                ? e.reaction
-                                : `<:unknown:${e.reaction}>`
+                        reaction: displayEmoji(e.reaction)
                     };
                 })
             );
@@ -77,7 +71,7 @@ module.exports = {
         const target = {
             msg_id: args[0],
             role_id: args[1],
-            reaction: args[2]
+            reaction: parseEmoji(args[2])
         };
 
         const foundRole = await msg.guild.roles.fetch(target.role_id);
