@@ -144,4 +144,5 @@ client.on("message", async msg => {
     }
 });
 
+client.commands = commands;
 db.init(client, process.env.SB2_TOKEN);

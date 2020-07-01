@@ -22,6 +22,15 @@ module.exports = {
         text += " done: " + version + "\n";
         await sent.edit(text);
 
+        const hookWait = client.commands
+            .filter(c => c.sync)
+            .map(async c => {
+                text += `Processing \`:${c.name}\` hook...\n`;
+                await sent.edit(text);
+                await c.sync();
+            });
+
+        await Promise.all(hookWait);
         await setStatus(client, "PLAYING", "shapez.io " + version);
 
         text += "\nSYNC COMPLETE";
