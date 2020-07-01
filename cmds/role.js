@@ -9,7 +9,7 @@ const { makeEmbed } = require("../utils");
  * @param {string} reaction
  */
 function autoFields(embed, role, reaction) {
-    const isCustom = reaction.length != 1;
+    const isCustom = reaction.length > 18;
     const emojiSpec = isCustom ? `<:unknown:${reaction}>` : reaction;
 
     embed.addField("Role", role.toString(), true);
@@ -40,7 +40,7 @@ module.exports = {
                         msg_id: e.msg_id,
                         role: role,
                         reaction:
-                            e.reaction.length == 1
+                            e.reaction.length <= 4
                                 ? e.reaction
                                 : `<:unknown:${e.reaction}>`
                     };
