@@ -1,7 +1,20 @@
 const Discord = require("discord.js");
 const { owners } = require("../config.json");
-const { getRows } = require("../db");
+const { getRows, deleteFrom, insertInto } = require("../db");
 const { makeEmbed } = require("../utils");
+
+/**
+ * @param {Discord.MessageEmbed} embed
+ * @param {Discord.Role|string} role
+ * @param {string} reaction
+ */
+function autoFields(embed, role, reaction) {
+    const isCustom = reaction.length != 1;
+    const emojiSpec = isCustom ? `<:unknown:${reaction}>` : reaction;
+
+    embed.addField("Role", role.toString(), true);
+    embed.addField("Emoji", emojiSpec, true);
+}
 
 module.exports = {
     name: "role",
@@ -49,6 +62,62 @@ module.exports = {
             return;
         }
 
-        await msg.channel.send("to be done!");
+        if (!owners.includes(msg.author.id)) {
+            const err = new Error("You are not allowed to manage roles.");
+            err.perms = true;
+            throw err;
+        }
+
+        if (args.length < 3) {
+            const err = new Error("Not enough arguments.");
+            err.perms = true;
+            throw err;
+        }
+
+        const target = {
+            msg_id: args[0],
+            role_id: args[1],
+            reaction: args[2]
+        };
+
+        const foundRole = await msg.guild.roles.fetch(target.role_id);
+        const extRows = await getRows("react_roles", target);
+
+        if (extRows.length > 0) {
+            const meta = await deleteFrom("react_roles", target);
+
+            const embed = makeEmbed(
+                "Removed auto-assigned role",
+                0xef30d2,
+                client
+            );
+
+            embed.setDescription(
+                `Message ID: ${target.msg_id}\n` +
+                    `Affected rows: ${meta.affectedRows}`
+            );
+            autoFields(embed, foundRole, target.reaction);
+
+            await msg.channel.send(embed);
+            return;
+        }
+
+        if (!foundRole) {
+            const err = new Error("Invalid role ID.");
+            err.perms = true;
+            throw err;
+        }
+
+        const meta = await insertInto("react_roles", target);
+
+        const embed = makeEmbed("Added auto-assigned role", 0xd2ef30, client);
+
+        embed.setDescription(
+            `Message ID: ${target.msg_id}\n` +
+                `Affected rows: ${meta.affectedRows}`
+        );
+        autoFields(embed, foundRole, target.reaction);
+
+        await msg.channel.send(embed);
     }
 };

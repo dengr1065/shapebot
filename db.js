@@ -46,9 +46,29 @@ async function getRows(table, defs, cols) {
     return await query(q);
 }
 
+async function insertInto(table, set) {
+    const sqlSet = Object.entries(set)
+        .map(e => `${conn.escapeId(e[0])}=${conn.escape(e[1])}`)
+        .join(",");
+
+    const sql = `INSERT INTO ${conn.escapeId(table)} SET ${sqlSet}`;
+    return await exec(sql);
+}
+
+async function deleteFrom(table, defs) {
+    const sqlDefs = Object.entries(defs)
+        .map(e => `${conn.escapeId(e[0])} <=> ${conn.escape(e[1])}`)
+        .join(" AND ");
+
+    const sql = `DELETE FROM ${conn.escapeId(table)} WHERE ${sqlDefs}`;
+    return await exec(sql);
+}
+
 module.exports = {
     init,
     query,
     exec,
-    getRows
+    getRows,
+    insertInto,
+    deleteFrom
 };
