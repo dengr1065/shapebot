@@ -19,7 +19,7 @@ function srcPart(src, beginStr, endStr, beginIncl = true, endIncl = false) {
  */
 function srcExtract(src, keys) {
     const extractor = keys.map(k => `${k}:${k}`).join(",");
-    const result = eval(`${src}; {${extractor}}`);
+    const result = eval(`${src}; ({${extractor}})`);
 
     const found = Object.keys(result);
     keys.forEach(k => {
