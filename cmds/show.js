@@ -2,8 +2,8 @@ const Discord = require("discord.js");
 const { fetchShapezRepo } = require("../utils");
 
 function srcPart(src, beginStr, endStr, beginIncl = true, endIncl = false) {
-    const begin = srcShapeDef.indexOf(beginStr);
-    const end = srcShapeDef.indexOf(endStr, begin);
+    const begin = src.indexOf(beginStr);
+    const end = src.indexOf(endStr, begin);
 
     const beginAdj = beginIncl ? begin : begin + beginStr.length;
     const endAdj = endIncl ? end + endStr.length : end;
