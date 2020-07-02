@@ -41,6 +41,7 @@ async function setStatus(client, type, name, url) {
 /**
  * @param {string?} branch
  * @param {string} file
+ * @returns {Promise<string>}
  */
 async function fetchShapezRepo(branch = "master", file) {
     const base = `https://raw.githubusercontent.com/tobspr/shapez.io/${branch}/`;
