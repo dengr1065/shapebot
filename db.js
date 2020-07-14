@@ -20,7 +20,7 @@ function init(client, token) {
 
 /**
  * @param {string} sql
- * @returns {object[]}
+ * @returns {Promise<object[]>}
  */
 async function query(sql) {
     const result = await conn.query(sql);
@@ -32,18 +32,35 @@ async function exec(sql) {
     return await conn.query(sql);
 }
 
-async function getRows(table, defs, cols) {
-    const sqlCols = !cols ? "*" : cols.map(c => conn.escapeId(c)).join(",");
+function formQuery(table, defs) {
+    const eid = conn.escapeId;
+    const esc = conn.escape;
 
-    let q = `SELECT ${sqlCols} FROM ${conn.escapeId(table)}`;
+    let q = ` FROM ${eid(table)}`;
+
     if (defs) {
         const sqlDefs = Object.entries(defs)
-            .map(e => `${conn.escapeId(e[0])} <=> ${conn.escape(e[1])}`)
+            .map(e => {
+                if (Array.isArray(e[1])) {
+                    const possible = e[1].map(v => {
+                        return `${eid(e[0])} <=> ${esc(v)}`;
+                    });
+                    return "(" + possible.join(" OR ") + ")";
+                }
+                return `${eid(e[0])} <=> ${esc(e[1])}`;
+            })
             .join(" AND ");
         q += ` WHERE ${sqlDefs};`;
     }
 
-    return await query(q);
+    return q;
+}
+
+async function getRows(table, defs, cols) {
+    const q = formQuery(table, defs);
+    const sqlCols = !cols ? "*" : cols.map(c => eid(c)).join(",");
+
+    return await query(`SELECT ${sqlCols}` + q);
 }
 
 async function insertInto(table, set) {
@@ -56,11 +73,7 @@ async function insertInto(table, set) {
 }
 
 async function deleteFrom(table, defs) {
-    const sqlDefs = Object.entries(defs)
-        .map(e => `${conn.escapeId(e[0])} <=> ${conn.escape(e[1])}`)
-        .join(" AND ");
-
-    const sql = `DELETE FROM ${conn.escapeId(table)} WHERE ${sqlDefs}`;
+    const sql = `DELETE` + formQuery(table, defs);
     return await exec(sql);
 }
 
@@ -68,6 +81,7 @@ module.exports = {
     init,
     query,
     exec,
+    formQuery,
     getRows,
     insertInto,
     deleteFrom
