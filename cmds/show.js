@@ -1,39 +1,16 @@
 const Discord = require("discord.js");
-const { fetchShapezRepo } = require("../utils");
-
-function srcPart(src, beginStr, endStr, beginIncl = true, endIncl = false) {
-    const begin = src.indexOf(beginStr);
-    const end = src.indexOf(endStr, begin);
-
-    const beginAdj = beginIncl ? begin : begin + beginStr.length;
-    const endAdj = endIncl ? end + endStr.length : end;
-
-    const part = src.substr(beginAdj, endAdj - beginAdj);
-    return part.replace(/export const/g, "const");
-}
-
-/**
- * @param {string} src
- * @param {string[]} keys
- * @returns {object}
- */
-function srcExtract(src, keys) {
-    const extractor = keys.map(k => `${k}:${k}`).join(",");
-    const result = eval(`${src}; ({${extractor}})`);
-
-    const found = Object.keys(result);
-    keys.forEach(k => {
-        if (!found.includes(k)) {
-            throw new Error(`Failed to extract ${k} key from source.`);
-        }
-    });
-
-    return result;
-}
+const { fetchShapezRepo, srcExtract, srcPart } = require("../utils");
+const { exec, insertInto } = require("../db");
 
 let enumSubShape = {};
 let enumSubShapeToShortcode = {};
 let isCached = false;
+
+const subCommands = {
+    buildings: "buildings",
+    upgrades: "upgrades",
+    levels: "levels"
+};
 
 module.exports = {
     name: "show",
@@ -45,7 +22,29 @@ module.exports = {
      * @param {string[]} args
      * @param {Discord.Client} client
      */
-    execute: async (msg, content, args, client) => {},
+    execute: async (msg, content, args, client) => {
+        const subcmd = args[0];
+
+        switch (subcmd) {
+            default:
+                const formattedList = Object.values(subCommands)
+                    .map(c => `\`${c}\``)
+                    .join(", ");
+
+                const text = `
+                WORK IN PROGRESS!
+                Available commands: ${formattedList}
+
+                Examples:
+                \`:show buildings belt\`
+                \`:show upgrades 2\`
+                \`:show levels 12\`
+                `.trim();
+
+                await msg.channel.send(text);
+                break;
+        }
+    },
     sync: async () => {
         const srcShapeDef = await fetchShapezRepo(
             "master",
@@ -54,11 +53,28 @@ module.exports = {
 
         const shapeDefEnums = srcExtract(
             srcPart(srcShapeDef, "export const enum", "for ("),
-            ["enumSubShape", "enumSubShapeToShortcode", "thisShouldFail"]
+            ["enumSubShape", "enumSubShapeToShortcode"]
         );
 
         enumSubShape = shapeDefEnums.enumSubShape;
         enumSubShapeToShortcode = shapeDefEnums.enumSubShapeToShortcode;
         isCached = true;
+
+        await exec("TRUNCATE TABLE `subshapes`");
+
+        const subShapesDBWait = Object.entries(enumSubShape)
+            .map(e => {
+                if (!enumSubShapeToShortcode[e[1]]) {
+                    throw new Error(`No shortcode for shape \`${e[1]}\``);
+                }
+                return {
+                    key: e[0],
+                    name: e[1],
+                    shortcode: enumSubShapeToShortcode[e[1]]
+                };
+            })
+            .map(insertInto.bind(null, "subshapes"));
+
+        await Promise.all(subShapesDBWait);
     }
 };

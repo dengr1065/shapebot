@@ -50,6 +50,53 @@ async function fetchShapezRepo(branch = "master", file) {
     return (await (await fetch(fullurl)).text()).trim();
 }
 
+function assert(condition, ...text) {
+    if (condition) return;
+    throw new Error(["Assertion failed:", ...text].join(" "));
+}
+
+/**
+ * @param {string} src
+ * @param {string[]} keys
+ * @returns {object}
+ */
+function srcExtract(srcRaw, keys) {
+    const assertAlways = assert;
+    assertAlways(true);
+
+    const src = srcRaw.replace(/export const/g, "const");
+
+    const extractor = keys.map(k => `${k}:${k}`).join(",");
+    const result = eval(`${src}; ({${extractor}})`);
+
+    const found = Object.keys(result);
+    keys.forEach(k => {
+        if (!found.includes(k)) {
+            throw new Error(`Failed to extract ${k} key from source.`);
+        }
+    });
+
+    return result;
+}
+
+/**
+ * @param {string} src
+ * @param {string} beginStr
+ * @param {string} endStr
+ * @param {boolean} beginIncl
+ * @param {boolean} endIncl
+ */
+function srcPart(src, beginStr, endStr, beginIncl = true, endIncl = false) {
+    const begin = src.indexOf(beginStr);
+    const end = src.indexOf(endStr, begin);
+
+    const beginAdj = beginIncl ? begin : begin + beginStr.length;
+    const endAdj = endIncl ? end + endStr.length : end;
+
+    const part = src.substr(beginAdj, endAdj - beginAdj);
+    return part.replace(/export const/g, "const");
+}
+
 function makeEmbed(title, color = 0x606060, client) {
     const embed = new Discord.MessageEmbed();
     embed.setTitle(title);
@@ -79,6 +126,8 @@ module.exports = {
     reloadVersion,
     setStatus,
     fetchShapezRepo,
+    srcExtract,
+    srcPart,
     makeEmbed,
     parseEmoji,
     displayEmoji
