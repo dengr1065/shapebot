@@ -9,6 +9,7 @@
     "author": "dengr1065",
     "license": "GPL-3.0-or-later",
     "dependencies": {
+        "canvas": "^2.6.1",
         "discord.js": "^12.2.0",
         "mariadb": "^2.4.0",
         "node-fetch": "^2.6.0"
