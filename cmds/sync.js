@@ -30,7 +30,15 @@ module.exports = {
                 await c.sync();
             });
 
-        await Promise.all(hookWait);
+        try {
+            await Promise.all(hookWait);
+        } catch (err) {
+            await setStatus(client, "PLAYING", "shapez.io " + version);
+
+            err.perms = true;
+            throw err;
+        }
+
         await setStatus(client, "PLAYING", "shapez.io " + version);
 
         text += "\nSYNC COMPLETE";
