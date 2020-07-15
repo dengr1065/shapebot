@@ -39,18 +39,23 @@ function formQuery(table, defs) {
     let q = ` FROM ${eid(table)}`;
 
     if (defs) {
-        const sqlDefs = Object.entries(defs)
-            .map(e => {
-                if (Array.isArray(e[1])) {
-                    const possible = e[1].map(v => {
-                        return `${eid(e[0])} <=> ${esc(v)}`;
-                    });
-                    return "(" + possible.join(" OR ") + ")";
-                }
-                return `${eid(e[0])} <=> ${esc(e[1])}`;
-            })
-            .join(" AND ");
-        q += ` WHERE ${sqlDefs};`;
+        if (!Array.isArray(defs)) {
+            defs = [defs];
+        }
+        const sqlDefs = defs.map(d => {
+            return Object.entries(d)
+                .map(e => {
+                    if (Array.isArray(e[1])) {
+                        const possible = e[1].map(v => {
+                            return `${eid(e[0])} <=> ${esc(v)}`;
+                        });
+                        return "(" + possible.join(" OR ") + ")";
+                    }
+                    return `${eid(e[0])} <=> ${esc(e[1])}`;
+                })
+                .join(" AND ");
+        });
+        q += ` WHERE ${sqlDefs.map(e => `(${e})`).join(" OR ")};`;
     }
 
     return q;
