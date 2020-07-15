@@ -62,7 +62,7 @@ module.exports = {
 
         let color = await colorInfo(args.shift());
 
-        if (args.length > 1) {
+        if (args.length > 0) {
             color = await args.reduce(async (current, next) => {
                 const colorB = (await colorInfo(next)).name;
                 return await colorMix((await current).name, colorB);
