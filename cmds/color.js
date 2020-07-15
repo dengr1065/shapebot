@@ -69,9 +69,10 @@ module.exports = {
             }, color);
         }
 
+        const colorHex = Number.parseInt(color.hex.substr(1), 16);
         const embed = makeEmbed(
             color.name.substr(0, 1).toUpperCase() + color.name.substr(1),
-            Number.parseInt(color.hex.substr(1), 16),
+            colorHex == 16777215 ? 16777214 : 16777215,
             client
         );
 
