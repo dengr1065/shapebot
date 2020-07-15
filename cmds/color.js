@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const { fetchShapezRepo, srcExtract, makeEmbed } = require("../utils");
-const { getRows, insertInto } = require("../db");
+const { exec, getRows, insertInto } = require("../db");
 
 async function colorInfo(name) {
     const invert = name.startsWith("!");
@@ -106,7 +106,7 @@ module.exports = {
 
         await exec("TRUNCATE TABLE `color_mixing`");
 
-        Promise.all(
+        await Promise.all(
             Object.entries(enums.enumColorMixingResults).map(mix => {
                 const waitAdd = Object.entries(mix[1])
                     .map(m => {
