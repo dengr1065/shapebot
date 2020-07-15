@@ -72,7 +72,7 @@ module.exports = {
         const colorHex = Number.parseInt(color.hex.substr(1), 16);
         const embed = makeEmbed(
             color.name.substr(0, 1).toUpperCase() + color.name.substr(1),
-            colorHex == 16777215 ? 16777214 : 16777215,
+            colorHex == 16777215 ? 16777214 : colorHex,
             client
         );
 
