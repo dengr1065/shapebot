@@ -1,9 +1,12 @@
 const Discord = require("discord.js");
 const { fetchShapezRepo, srcExtract, makeEmbed } = require("../utils");
-const { getRows } = require("../db");
+const { getRows, insertInto } = require("../db");
 
 async function colorInfo(name) {
-    const color = (
+    const invert = name.startsWith("!");
+    if (invert) name = name.substr(1);
+
+    let color = (
         await getRows("colors", [{ name: name }, { shortcode: name }])
     )[0];
 
@@ -11,6 +14,14 @@ async function colorInfo(name) {
         const err = new Error("No such color: " + name);
         err.perms = true;
         throw err;
+    }
+
+    if (invert) {
+        color = (
+            await getRows("colors", {
+                inverted: color.name
+            })
+        )[0];
     }
 
     return color;
@@ -77,5 +88,38 @@ module.exports = {
             "enumInvertedColors",
             "enumColorMixingResults"
         ]);
+
+        await exec("TRUNCATE TABLE `colors`");
+
+        Promise.all(
+            Object.values(enums.enumColors)
+                .map(c => {
+                    return {
+                        name: c,
+                        shortcode: enums.enumColorToShortcode[c],
+                        hex: enums.enumColorsToHexCode[c],
+                        inverted: enums.enumInvertedColors[c]
+                    };
+                })
+                .map(insertInto.bind(null, "colors"))
+        );
+
+        await exec("TRUNCATE TABLE `color_mixing`");
+
+        Promise.all(
+            Object.entries(enums.enumColorMixingResults).map(mix => {
+                const waitAdd = Object.entries(mix[1])
+                    .map(m => {
+                        return {
+                            color_a: mix[0],
+                            color_b: m[0],
+                            result: m[1]
+                        };
+                    })
+                    .map(insertInto.bind(null, "color_mixing"));
+
+                return Promise.all(waitAdd);
+            })
+        );
     }
 };
