@@ -91,7 +91,7 @@ module.exports = {
 
         await exec("TRUNCATE TABLE `colors`");
 
-        Promise.all(
+        await Promise.all(
             Object.values(enums.enumColors)
                 .map(c => {
                     return {

@@ -24,7 +24,8 @@ module.exports = {
 
         const hookWait = client.commands
             .filter(c => c.sync)
-            .map(async c => {
+            .reduce(async (prev, c) => {
+                if (prev) await prev;
                 text += `Processing \`:${c.name}\` hook...\n`;
                 await sent.edit(text);
                 await c.sync();
