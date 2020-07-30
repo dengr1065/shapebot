@@ -11,7 +11,8 @@ async function colorInfo(name) {
     )[0];
 
     if (!color) {
-        const err = new Error("No such color: " + name);
+        // replacing ( with \( as lazy link prevention
+        const err = new Error("No such color: " + name.replace(/\(/g, "\\("));
         err.perms = true;
         throw err;
     }
