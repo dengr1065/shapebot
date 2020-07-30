@@ -62,7 +62,7 @@ module.exports = {
 
         await exec("TRUNCATE TABLE `subshapes`");
 
-        const subShapesDBWait = Object.entries(enumSubShape)
+        await Object.entries(enumSubShape)
             .map(e => {
                 if (!enumSubShapeToShortcode[e[1]]) {
                     throw new Error(`No shortcode for shape \`${e[1]}\``);
@@ -73,10 +73,14 @@ module.exports = {
                     shortcode: enumSubShapeToShortcode[e[1]]
                 };
             })
-            .map(row => {
-                insertInto("subshapes", row);
+            .reduce((prev, row) => {
+                if (!prev) {
+                    return insertInto("subshapes", row);
+                } else {
+                    return prev.then(() => {
+                        return insertInto("subshapes", row);
+                    });
+                }
             });
-
-        await Promise.all(subShapesDBWait);
     }
 };
