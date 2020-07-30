@@ -126,7 +126,7 @@ client.on("message", async msg => {
 
         const r = `./reports/Err-${err.constructor.name}-${Date.now()}.log`;
         if (!err.perms) {
-            fs.writeFileSync(r, err.toString(), "utf-8");
+            fs.writeFileSync(r, err.toString() + "\n" + err.stack, "utf-8");
         }
 
         const isGeneric = err.constructor.name == "Error";
