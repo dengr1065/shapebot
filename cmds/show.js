@@ -52,7 +52,7 @@ module.exports = {
         );
 
         const shapeDefEnums = srcExtract(
-            srcPart(srcShapeDef, "export const enum", "for ("),
+            srcPart(srcShapeDef, "const enum", "for ("),
             ["enumSubShape", "enumSubShapeToShortcode"]
         );
 
