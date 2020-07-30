@@ -73,7 +73,9 @@ module.exports = {
                     shortcode: enumSubShapeToShortcode[e[1]]
                 };
             })
-            .map(insertInto.bind(null, "subshapes"));
+            .map(row => {
+                insertInto("subshapes", row);
+            });
 
         await Promise.all(subShapesDBWait);
     }

@@ -35,8 +35,6 @@ module.exports = {
             await Promise.all(hookWait);
         } catch (err) {
             await setStatus(client, "PLAYING", "shapez.io " + version);
-
-            err.perms = true;
             throw err;
         }
 
