@@ -22,17 +22,15 @@ module.exports = {
         text += " done: " + version + "\n";
         await sent.edit(text);
 
-        const hookWait = client.commands
-            .filter(c => c.sync)
-            .reduce(async (prev, c) => {
-                if (prev) await prev;
-                text += `Processing \`:${c.name}\` hook...\n`;
-                await sent.edit(text);
-                await c.sync();
-            });
-
         try {
-            await Promise.all(hookWait);
+            await client.commands
+                .filter(c => c.sync)
+                .reduce(async (prev, c) => {
+                    if (prev) await prev;
+                    text += `Processing \`:${c.name}\` hook...\n`;
+                    await sent.edit(text);
+                    return await c.sync();
+                });
         } catch (err) {
             await setStatus(client, "PLAYING", "shapez.io " + version);
             throw err;

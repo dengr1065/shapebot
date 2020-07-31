@@ -74,7 +74,6 @@ module.exports = {
             });
         });
 
-        console.log(dbWait);
         await Promise.all(dbWait);
     }
 };
