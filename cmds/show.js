@@ -1,10 +1,4 @@
 const Discord = require("discord.js");
-const { fetchShapezRepo, srcExtract, srcPart } = require("../utils");
-const { exec, insertInto } = require("../db");
-
-let enumSubShape = {};
-let enumSubShapeToShortcode = {};
-let isCached = false;
 
 const subCommands = {
     buildings: "buildings",
@@ -44,36 +38,5 @@ module.exports = {
                 await msg.channel.send(text);
                 break;
         }
-    },
-    sync: async () => {
-        const srcShapeDef = await fetchShapezRepo(
-            "master",
-            "src/js/game/shape_definition.js"
-        );
-
-        const shapeDefEnums = srcExtract(
-            srcPart(srcShapeDef, "const enum", "for ("),
-            ["enumSubShape", "enumSubShapeToShortcode"]
-        );
-
-        enumSubShape = shapeDefEnums.enumSubShape;
-        enumSubShapeToShortcode = shapeDefEnums.enumSubShapeToShortcode;
-        isCached = true;
-
-        await exec("TRUNCATE TABLE `subshapes`");
-
-        const dbWait = Object.entries(enumSubShape).map(e => {
-            if (!enumSubShapeToShortcode[e[1]]) {
-                throw new Error(`No shortcode for shape \`${e[1]}\``);
-            }
-
-            return insertInto("subshapes", {
-                key: e[0],
-                name: e[1],
-                shortcode: enumSubShapeToShortcode[e[1]]
-            });
-        });
-
-        await Promise.all(dbWait);
     }
 };
