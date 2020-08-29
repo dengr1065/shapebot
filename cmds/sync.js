@@ -23,14 +23,11 @@ module.exports = {
         await sent.edit(text);
 
         try {
-            await client.commands
-                .filter(c => c.sync)
-                .reduce(async (prev, c) => {
-                    if (prev) await prev;
-                    text += `Processing \`:${c.name}\` hook...\n`;
-                    await sent.edit(text);
-                    return await c.sync();
-                });
+            for (const c of client.commands) {
+                text += `Processing \`:${c.name}\` hook...\n`;
+                await sent.edit(text);
+                await c.sync();
+            }
         } catch (err) {
             await setStatus(client, "PLAYING", "shapez.io " + version);
             throw err;
