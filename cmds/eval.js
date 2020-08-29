@@ -27,7 +27,7 @@ function inspect(obj) {
             .slice(1)
             .map(msg => msg.editedAt.toLocaleTimeString("en-US"));
 
-        return `/* Message ${obj.id} by ${obj.author.id}\n` +
+        return `/* Message ${obj.id}\n` +
             ` * Created at ${obj.createdAt.toLocaleString("en-US")}\n` +
             (editTimes.length ? editTimes.map(time => ` * Edited at ${time}`).join("\n") : "") +
             ` * ~~~~~~~~~~~~ *\n * ` +
